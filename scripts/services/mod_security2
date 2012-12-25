@@ -1,0 +1,172 @@
+#!/usr/bin/perl -w
+
+use Logwatch ':dates';
+
+# Disable warnings about unused variables
+no warnings qw(once);
+
+my $Detail = $ENV{'LOGWATCH_DETAIL_LEVEL'} || 0;
+my $Debug = $ENV{'LOGWATCH_DEBUG'} || 0;
+my $SearchDate = TimeFilter('%d/%b/%Y:%H:%M:%S');
+my $within_range = 0;
+
+my %tmpEntry = ();
+my $count = 0;
+
+my %messages = ();
+my %topips = ();
+my %toprules = ();
+
+my $check = 0;
+my $option = '';
+
+
+if ( $Debug >= 5 ) {
+    print STDERR "\n\nDEBUG MODE \n\n";
+}
+
+while (defined($ThisLine = <STDIN>)) {
+    chomp($ThisLine);
+
+    # Reset $check if line starts with two dashes
+    if ( $ThisLine =~ /-[A-Z]--/ ) {
+        $check = 0;
+        $option = "";
+    }
+
+    if ($check == 1) {
+        if ($option eq "audit-log-header") {
+            ($timestamp, $transactionID, $sourceIP, $sourcePort, $destIP, $destPort ) = ($ThisLine =~ /\[(.*?)\] (.*?) (.*?) (.*?) (.*?) (.*?)$/ );
+
+            $tmpEntry{$count}{"timestamp"} = $timestamp;
+            $tmpEntry{$count}{"sourceIp"} = $sourceIP;
+            $tmpEntry{$count}{"sourcePort"} = $sourcePort;
+            $tmpEntry{$count}{"destIp"} = $destIP;
+            $tmpEntry{$count}{"destPort"} = $destPort;
+
+            if ( $Debug >= 5 ) {
+                print STDERR "\n";
+                print STDERR "DATE: " . $timestamp . "\n";
+                print STDERR "FROM: ". $sourceIP . ":" . $sourcePort . "\n";
+                print STDERR "TO: ". $destIP . ":" . $destPort . "\n";
+            }
+        }
+
+        if ($option eq "request-header") {
+            if ( ($method, $requestUri) = ($ThisLine =~ /^(POST|GET) (.*?)$/) ) {
+                $tmpEntry{$count}{"method"} = $method;
+                $tmpEntry{$count}{"uri"} = $requestUri;
+
+                if ( $Debug >= 5 ) {
+                    print STDERR "METHOD: " . $method . "\n";
+                    print STDERR "URI: " . $requestUri . "\n";
+                }
+            }
+            elsif ( ($hostname) = ($ThisLine =~ /^Host: (.*?)$/) ) {
+                $tmpEntry{$count}{"hostname"} = $hostname;
+
+                if ( $Debug >= 5 ) {
+                    print STDERR "HOST: " . $hostname . "\n";
+                }
+            }
+        }
+        if ($option eq "audit-log-trailer") {
+            if ( $ThisLine =~ /^Message:/ ) {
+                if ( ($ruleId) = ($ThisLine =~ /\[id \"(.*?)\"\]/) ) {
+                    if ( $Debug >= 5 ) {
+                        print STDERR "Rule ID: " . $ruleId. "\n";
+                    }
+                }
+                if ( ($msg) = ($ThisLine =~ /\[msg \"(.*?)\"\]/) ) {
+                    if ( $Debug >= 5 ) {
+                        print STDERR "Message: " . $msg. "\n";
+                    }
+                }
+                $tmpEntry{$count}{"ruleid"} = $ruleId;
+                $tmpEntry{$count}{"message"} = $msg;
+            }
+
+            if ( ($action) = ($ThisLine =~ /^Action: (.*?)$/) ) {
+                $tmpEntry{$count}{"action"} = $action;
+                if ( $Debug >= 5 ) {
+                    print STDERR "Action: " . $action. "\n";
+                }
+            }
+            if ( ($engineMode) = ($ThisLine =~ /^Engine-Mode: (.*?)$/) ) {
+                $tmpEntry{$count}{"engine"} = $engineMode;
+                if ( $Debug >= 5 ) {
+                    print STDERR "Engine mode: " . $engineMode. "\n";
+                }
+            }
+        }
+    }
+
+    if ( $ThisLine =~ /-A--/ ) {
+        $check = 1;
+        $option = "audit-log-header";
+    }
+    elsif ( $ThisLine =~ /-B--/ ) {
+        $check = 1;
+        $option = "request-header";
+    }
+    elsif ( $ThisLine =~ /-H--/ ) {
+        $check = 1;
+        $option = "audit-log-trailer";
+    }
+    elsif ( $ThisLine =~ /-Z--/ ) {
+        $check = 0;
+        $option = "";
+
+        # Create new summary entry
+        if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "") {
+            $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
+            $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
+            $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
+
+            $topips{$tmpEntry{$count}{"sourceIp"}}++;
+            $toprules{$tmpEntry{$count}{"ruleid"}}++;
+        }
+
+        # Increase counter
+        $count++;
+
+        # Reset values
+        $tmpEntry = ();
+        $tmpEntry{$count}{"action"} = "";
+        $tmpEntry{$count}{"hostname"} = "";
+
+        if ( $Debug >= 5 ) {
+            print STDERR "---------------------------------------\n";
+        }
+    }
+}
+
+# Start summary
+if (keys %messages) {
+   print "\nATTACKS BLOCKED ON VHOSTS:\n";
+   foreach my $vhost ( sort {$a cmp $b} keys %messages ) {
+        print "\n" . $vhost . " - " . $messages{$vhost}{"numAttacks"} . " time(s)\n";
+
+        foreach my $fromip (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}}) {
+            foreach my $ruleid (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}{$fromip}}) {
+                print "  [ip: " . $fromip . "] ";
+                print "[id: " . $ruleid . " ] [msg: " . $messages{$vhost}{"attack"}{$fromip}{$ruleid} . "] ";
+                print " - " . $messages{$vhost}{$fromip}{$ruleid} . " time(s)\n";
+            }
+        }
+
+   }
+}
+
+# Top 10 blocked IPs
+if (keys %topips) {
+   print "\nTOP 10 BLOCKED IPS:\n";
+   my $cnt = 0;
+   foreach my $ip ( sort {$topips{$b} <=> $topips{$a}} keys %topips ) {
+        print "\n  " . $ip . " - " . $topips{$ip} . " time(s)";
+        $cnt++;
+        if($cnt == 10) { last(); }
+   }
+}
+
+exit(0)
