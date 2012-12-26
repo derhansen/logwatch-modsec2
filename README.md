@@ -20,30 +20,30 @@ false/positives.
 Example output
 -
 
- --------------------- ModSecurity2 (mod_security2) Begin ------------------------
+--------------------- ModSecurity2 (mod_security2) Begin ------------------------
 
- ATTACKS BLOCKED ON VHOSTS:
+ATTACKS BLOCKED ON VHOSTS:
 
- subdomain.domain.tld - 2 time(s)
-  [ip: xxx.xxx.xxx.xxx] [id: 981231 ] [msg: SQL Comment Sequence Detected.]  - 1 time(s)
-  [ip: xxx.xxx.xxx.xxx] [id: 981231 ] [msg: SQL Comment Sequence Detected.]  - 1 time(s)
+subdomain.domain.tld - 2 time(s)
+[ip: xxx.xxx.xxx.xxx] [id: 981231 ] [msg: SQL Comment Sequence Detected.]  - 1 time(s)
+[ip: xxx.xxx.xxx.xxx] [id: 981231 ] [msg: SQL Comment Sequence Detected.]  - 1 time(s)
 
- www.site.tld - 1 time(s)
-  [ip: xxx.xxx.xxx.xxx] [id: 990012 ] [msg: Rogue web site crawler]  - 1 time(s)
-  [ip: xxx.xxx.xxx.xx] [id: 981318 ] [msg: SQL Injection Attack: Common Injection Testing Detected]  - 5 time(s)
-  [ip: xxx.xxx.xxx.xx] [id: 950901 ] [msg: SQL Injection Attack: SQL Tautology Detected.]  - 2 time(s)
+www.site.tld - 1 time(s)
+[ip: xxx.xxx.xxx.xxx] [id: 990012 ] [msg: Rogue web site crawler]  - 1 time(s)
+[ip: xxx.xxx.xxx.xx] [id: 981318 ] [msg: SQL Injection Attack: Common Injection Testing Detected]  - 5 time(s)
+[ip: xxx.xxx.xxx.xx] [id: 950901 ] [msg: SQL Injection Attack: SQL Tautology Detected.]  - 2 time(s)
 
- www.anothersite.tld - 1 time(s)
-  [ip: xxx.xxx.xxx.xxx] [id: 958291 ] [msg: Range: field exists and begins with 0.]  - 1 time(s)
+www.anothersite.tld - 1 time(s)
+[ip: xxx.xxx.xxx.xxx] [id: 958291 ] [msg: Range: field exists and begins with 0.]  - 1 time(s)
 
- TOP 10 BLOCKED IPS:
-  xxx.xxx.xxx.xxx - 2 time(s)
-  xx.xxx.xxx.xxx - 1 time(s)
-  xxx.xxx.xx.xx - 1 time(s)
-  xxx.xxx.xxx.xx - 1 time(s)
-  xxx.xxx.xxx.xxx - 1 time(s)
+TOP 10 BLOCKED IPS:
+xxx.xxx.xxx.xxx - 2 time(s)
+xx.xxx.xxx.xxx - 1 time(s)
+xxx.xxx.xx.xx - 1 time(s)
+xxx.xxx.xxx.xx - 1 time(s)
+xxx.xxx.xxx.xxx - 1 time(s)
 
- ---------------------- ModSecurity2 (mod_security2) End -------------------------
+---------------------- ModSecurity2 (mod_security2) End -------------------------
 
 
 Compatibility
