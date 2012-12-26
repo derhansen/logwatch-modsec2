@@ -1,2 +1,5 @@
+26.12.2012 - Torben Hansen <derhansen@gmail.com>
+- Added datefilter - #1
+
 25.12.2012 - Torben Hansen <derhansen@gmail.com>
 - Initial commit

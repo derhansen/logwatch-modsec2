@@ -117,14 +117,16 @@ while (defined($ThisLine = <STDIN>)) {
         $check = 0;
         $option = "";
 
-        # Create new summary entry
-        if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "") {
-            $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
-            $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
-            $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
+        # Create new summary entry if date matches searchdate
+        if ( $tmpEntry{$count}{"timestamp"} =~ /$SearchDate/ ) {
+            if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "") {
+                $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
+                $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
+                $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
 
-            $topips{$tmpEntry{$count}{"sourceIp"}}++;
-            $toprules{$tmpEntry{$count}{"ruleid"}}++;
+                $topips{$tmpEntry{$count}{"sourceIp"}}++;
+                $toprules{$tmpEntry{$count}{"ruleid"}}++;
+            }
         }
 
         # Increase counter
