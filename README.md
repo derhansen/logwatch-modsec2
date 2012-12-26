@@ -1,10 +1,10 @@
-Logwatch configuration for mod_security2 audit logfiles
+Logwatch configuration for ModSecurity 2 audit logfiles
 =
 
 What does it do?
 -
 
-This is a logwatch filter for mod_security2 audit logfiles. It collects events from
+This is a logwatch filter for ModSecurity 2 audit logfiles. It collects events from
 the audit log when an logentry contains:
 
 * A hostname - e.g. www.site.tld
