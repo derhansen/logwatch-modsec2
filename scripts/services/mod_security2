@@ -165,7 +165,7 @@ if (keys %topips) {
    print "\nTOP 10 BLOCKED IPS:\n";
    my $cnt = 0;
    foreach my $ip ( sort {$topips{$b} <=> $topips{$a}} keys %topips ) {
-        print "\n  " . $ip . " - " . $topips{$ip} . " time(s)";
+        print "\n  " . sprintf("%2s", ($cnt + 1)) . ". " . $ip . " - " . $topips{$ip} . " time(s)";
         $cnt++;
         if($cnt == 10) { last(); }
    }
