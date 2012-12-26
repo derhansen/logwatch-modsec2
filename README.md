@@ -19,7 +19,7 @@ false/positives.
 
 Example output
 -
-
+<pre>
 --------------------- ModSecurity2 (mod_security2) Begin ------------------------
 
 ATTACKS BLOCKED ON VHOSTS:
@@ -44,7 +44,7 @@ xxx.xxx.xxx.xx - 1 time(s)
 xxx.xxx.xxx.xxx - 1 time(s)
 
 ---------------------- ModSecurity2 (mod_security2) End -------------------------
-
+</pre>
 
 Compatibility
 -
