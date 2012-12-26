@@ -151,7 +151,7 @@ if (keys %messages) {
 
         foreach my $fromip (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}}) {
             foreach my $ruleid (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}{$fromip}}) {
-                print "  [ip: " . $fromip . "] ";
+                print "  [ip: " . sprintf("%-15s", $fromip) . "] ";
                 print "[id: " . $ruleid . " ] [msg: " . $messages{$vhost}{"attack"}{$fromip}{$ruleid} . "] ";
                 print " - " . $messages{$vhost}{$fromip}{$ruleid} . " time(s)\n";
             }
@@ -169,6 +169,7 @@ if (keys %topips) {
         $cnt++;
         if($cnt == 10) { last(); }
    }
+   print "\n";
 }
 
 exit(0)

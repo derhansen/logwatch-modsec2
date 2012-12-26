@@ -2,6 +2,7 @@
 - Added datefilter - #1
 - Added ducumentation
 - Added numeration - #3
+- Output formatted - #4
 - Updated configuration to search archives - #2
 
 25.12.2012 - Torben Hansen <derhansen@gmail.com>
