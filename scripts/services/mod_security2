@@ -58,10 +58,15 @@ my %toprules = ();
 my $check = 0;
 my $option = '';
 
-
 if ( $Debug >= 5 ) {
     print STDERR "\n\nDEBUG MODE \n\n";
 }
+
+# Initialize array
+$tmpEntry{$count}{"action"} = "";
+$tmpEntry{$count}{"hostname"} = "";
+$tmpEntry{$count}{"message"} = "";
+$tmpEntry{$count}{"ruleid"} = "";
 
 while (defined($ThisLine = <STDIN>)) {
     chomp($ThisLine);
@@ -157,7 +162,7 @@ while (defined($ThisLine = <STDIN>)) {
 
         # Create new summary entry if date matches searchdate
         if ( $tmpEntry{$count}{"timestamp"} =~ /$SearchDate/ ) {
-            if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "") {
+            if (  $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleid"} ne "" ) {
                 $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
                 $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
                 $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
@@ -174,6 +179,8 @@ while (defined($ThisLine = <STDIN>)) {
         $tmpEntry = ();
         $tmpEntry{$count}{"action"} = "";
         $tmpEntry{$count}{"hostname"} = "";
+        $tmpEntry{$count}{"message"} = "";
+        $tmpEntry{$count}{"ruleid"} = "";
 
         if ( $Debug >= 5 ) {
             print STDERR "---------------------------------------\n";
