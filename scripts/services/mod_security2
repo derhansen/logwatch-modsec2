@@ -1,7 +1,10 @@
 #!/usr/bin/perl -w
 ##########################################################################
-# $Id: mod_security2, v 1.0.1 2013/01/11
+# $Id: mod_security2, v 1.0.2 2013/11/11
 ##########################################################################
+#
+# Revision 1.0.2   2013/11/11
+# fixed error when message and ruleid not set #8
 #
 # Revision 1.0.1   2013/01/11
 # fixed problem with uninitialized values #6

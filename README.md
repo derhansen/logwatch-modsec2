@@ -49,7 +49,7 @@ xxx.xxx.xxx.xxx - 1 time(s)
 Compatibility
 -
 
-The filter has been tested with ModSecurity 2 version 2.7.1 and the OWASP ModSecurity Core Rule Set (CRS)
+The filter has been tested with ModSecurity 2 version 2.7.4 and the OWASP ModSecurity Core Rule Set (CRS)
 It also works with ModSecurity 2 version 2.6
 
 
