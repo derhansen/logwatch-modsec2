@@ -1,7 +1,10 @@
-11.01.2012 - Torben Hansen <derhansen@gmail.com>
+11.01.2013 - Torben Hansen <derhansen@gmail.com>
+- Fixed problem with entries, which do not contain a message or rule id #8
+
+11.01.2013 - Torben Hansen <derhansen@gmail.com>
 - Problem with uninitialized values #6
 
-04.01.2012 - Torben Hansen <derhansen@gmail.com>
+04.01.2013 - Torben Hansen <derhansen@gmail.com>
 - Added copyright/license notice to script
 
 26.12.2012 - Torben Hansen <derhansen@gmail.com>

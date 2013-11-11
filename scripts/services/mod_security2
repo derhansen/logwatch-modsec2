@@ -162,13 +162,15 @@ while (defined($ThisLine = <STDIN>)) {
 
         # Create new summary entry if date matches searchdate
         if ( $tmpEntry{$count}{"timestamp"} =~ /$SearchDate/ ) {
-            if (  $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleid"} ne "" ) {
-                $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
-                $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
-                $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
+            if ( defined $tmpEntry{$count}{"action"} && defined $tmpEntry{$count}{"hostname"} && defined $tmpEntry{$count}{"message"} && defined $tmpEntry{$count}{"ruleid"} ) {
+                if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleid"} ne "" ) {
+                    $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
+                    $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
+                    $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
 
-                $topips{$tmpEntry{$count}{"sourceIp"}}++;
-                $toprules{$tmpEntry{$count}{"ruleid"}}++;
+                    $topips{$tmpEntry{$count}{"sourceIp"}}++;
+                    $toprules{$tmpEntry{$count}{"ruleid"}}++;
+                }
             }
         }
 
