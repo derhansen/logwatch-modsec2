@@ -164,7 +164,8 @@ while (defined($ThisLine = <STDIN>)) {
         $option = "";
 
         # Create new summary entry if date matches searchdate
-        if ( $tmpEntry{$count}{"timestamp"} =~ /$SearchDate/ ) {
+        $maybeTimestamp = $tmpEntry{$count}{"timestamp"};
+        if ( defined($maybeTimestamp) && ($maybeTimestamp =~ /$SearchDate/) ) {
             if ( defined $tmpEntry{$count}{"action"} && defined $tmpEntry{$count}{"hostname"} && defined $tmpEntry{$count}{"message"} && defined $tmpEntry{$count}{"ruleid"} ) {
                 if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleid"} ne "" ) {
                     $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
