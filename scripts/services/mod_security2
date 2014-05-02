@@ -118,18 +118,20 @@ while (defined($ThisLine = <STDIN>)) {
         }
         if ($option eq "audit-log-trailer") {
             if ( $ThisLine =~ /^Message:/ ) {
-                if ( ($ruleId) = ($ThisLine =~ /\[id \"(.*?)\"\]/) ) {
-                    if ( $Debug >= 5 ) {
-                        print STDERR "Rule ID: " . $ruleId. "\n";
+                if ($tmpEntry{$count}{"ruleid"} eq "" && $tmpEntry{$count}{"message"} eq "") {
+                    if ( ($ruleId) = ($ThisLine =~ /\[id \"(.*?)\"\]/) ) {
+                        if ( $Debug >= 5 ) {
+                            print STDERR "Rule ID: " . $ruleId. "\n";
+                        }
                     }
-                }
-                if ( ($msg) = ($ThisLine =~ /\[msg \"(.*?)\"\]/) ) {
-                    if ( $Debug >= 5 ) {
-                        print STDERR "Message: " . $msg. "\n";
+                    if ( ($msg) = ($ThisLine =~ /\[msg \"(.*?)\"\]/) ) {
+                        if ( $Debug >= 5 ) {
+                            print STDERR "Message: " . $msg. "\n";
+                        }
                     }
+                    $tmpEntry{$count}{"ruleid"} = $ruleId;
+                    $tmpEntry{$count}{"message"} = $msg;
                 }
-                $tmpEntry{$count}{"ruleid"} = $ruleId;
-                $tmpEntry{$count}{"message"} = $msg;
             }
 
             if ( ($action) = ($ThisLine =~ /^Action: (.*?)$/) ) {
