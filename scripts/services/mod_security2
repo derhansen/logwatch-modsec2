@@ -132,8 +132,10 @@ while (defined($ThisLine = <STDIN>)) {
                             print STDERR "Message: " . $msg. "\n";
                         }
                     }
-                    $tmpEntry{$count}{"ruleid"} = $ruleId;
-                    $tmpEntry{$count}{"message"} = $msg;
+                    if (defined($msg) && defined($ruleId)) {
+                        $tmpEntry{$count}{"ruleid"} = $ruleId;
+                        $tmpEntry{$count}{"message"} = $msg;
+                    }
                 }
             }
 
