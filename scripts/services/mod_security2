@@ -148,7 +148,13 @@ while (defined($ThisLine = <STDIN>)) {
                             print STDERR "Data: " . $data. "\n";
                         }
                     }
-                    if (defined($msg) && defined($ruleId)) {
+                    if (defined($msg) && $msg ne "" && defined($ruleId) && $ruleId ne "") {
+                        if (defined($tmpEntry{$count}{"uri"}) && $tmpEntry{$count}{"uri"} ne "") {
+                            $msg .= " - " . $tmpEntry{$count}{"uri"};
+                        }
+                        if (defined($data) && $data ne "") {
+                            $msg .= " - " . $data;
+                        }
                         $tmpEntry{$count}{"ruleId"} = $ruleId;
                         $tmpEntry{$count}{"message"} = $msg;
                     }
@@ -254,6 +260,9 @@ while (defined($ThisLine = <STDIN>)) {
         $count++;
 
         # Reset values
+        $msg = "";
+        $ruleId = "";
+
         $tmpEntry = ();
         $tmpEntry{$count}{"action"} = "";
         $tmpEntry{$count}{"hostname"} = "";
