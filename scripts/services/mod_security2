@@ -259,8 +259,8 @@ if (keys %messages) {
 
         foreach my $fromIp (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}}) {
             foreach my $ruleId (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}{$fromIp}}) {
-                print "  [ip: " . sprintf("%-15s", $fromIp) . "] ";
-                print "[id: " . $ruleId . " ] [msg: " . $messages{$vhost}{"attack"}{$fromIp}{$ruleId} . "] ";
+                print "  [" . sprintf("%-15s", $fromIp) . "] ";
+                print "[" . $ruleId . "] [" . $messages{$vhost}{"attack"}{$fromIp}{$ruleId} . "] ";
                 print " - " . $messages{$vhost}{$fromIp}{$ruleId} . " time(s)\n";
             }
         }
