@@ -326,6 +326,21 @@ if (keys %messages) {
    }
 }
 
+# Top 10 matched rules
+if (keys %topRules) {
+    print "\nTOP 10 Matched rules:\n";
+    my $cnt = 0;
+    foreach my $id ( sort {$topRules{$b} <=> $topRules{$a}} keys %topRules ) {
+        print "\n  " . sprintf("%2s", ($cnt + 1)) . ". " . $id . " - " . $topRules{$id} . " time(s)";
+
+        $cnt++;
+        if ($cnt == 10) {
+            last();
+        }
+    }
+    print "\n";
+}
+
 # Top 10 blocked IPs
 if (keys %topIps) {
     print "\nTOP 10 BLOCKED IPS:\n";
