@@ -102,11 +102,13 @@ while (defined($ThisLine = <STDIN>)) {
         }
 
         if ($option eq "request-header") {
-            if ( ($method, $requestUri) = ($ThisLine =~ /^(GET|HEAD|OPTIONS|TRACE|TRACK|POST|PUT|DELETE|PATCH|CONNECT|PROPFIND) (.*?) HTTP\/[0-9.]+$/) ) {
+            if ( ($method, $requestUri, $proto) = ($ThisLine =~ /^(GET|HEAD|OPTIONS|TRACE|TRACK|POST|PUT|DELETE|PATCH|CONNECT|PROPFIND) (.*?) (HTTP\/[0-9.]+)$/) ) {
+                $tmpEntry{$count}{"proto"} = $proto;
                 $tmpEntry{$count}{"method"} = $method;
                 $tmpEntry{$count}{"uri"} = $requestUri;
 
                 if ( $Debug >= 5 ) {
+                    print STDERR "PROTO: " . $proto . "\n";
                     print STDERR "METHOD: " . $method . "\n";
                     print STDERR "URI: " . $requestUri . "\n";
                 }
