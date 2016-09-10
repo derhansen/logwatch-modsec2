@@ -173,15 +173,27 @@ while (defined($ThisLine = <STDIN>)) {
         # Create new summary entry if date matches searchdate
         $maybeTimestamp = $tmpEntry{$count}{"timestamp"};
         if ( defined($maybeTimestamp) && ($maybeTimestamp =~ /$SearchDate/) ) {
-            if ( defined $tmpEntry{$count}{"action"} && defined $tmpEntry{$count}{"hostname"} && defined $tmpEntry{$count}{"message"} && defined $tmpEntry{$count}{"ruleId"} ) {
-                if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleId"} ne "" ) {
-                    $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
-                    $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleId"}} =  $tmpEntry{$count}{"message"};
-                    $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleId"}}++;
 
-                    $topIps{$tmpEntry{$count}{"sourceIp"}}++;
-                    $topRules{$tmpEntry{$count}{"ruleId"}}++;
-                }
+            if (defined $tmpEntry{$count}{"action"} &&
+                defined $tmpEntry{$count}{"hostname"} &&
+                defined $tmpEntry{$count}{"message"} &&
+                defined $tmpEntry{$count}{"ruleId"} &&
+                $tmpEntry{$count}{"action"} ne "" &&
+                $tmpEntry{$count}{"hostname"} ne "" &&
+                $tmpEntry{$count}{"message"} ne "" &&
+                $tmpEntry{$count}{"ruleId"} ne "") {
+
+                $hostname = $tmpEntry{$count}{"hostname"};
+                $sourceIp = $tmpEntry{$count}{"sourceIp"};
+                $ruleId = $tmpEntry{$count}{"ruleId"};
+                $message = $tmpEntry{$count}{"message"};
+
+                $messages{$hostname}{"numAttacks"}++;
+                $messages{$hostname}{"attack"}{$sourceIp}{$ruleId} = $message;
+                $messages{$hostname}{$sourceIp}{$ruleId}++;
+
+                $topIps{$sourceIp}++;
+                $topRules{$ruleId}++;
             }
         }
 
