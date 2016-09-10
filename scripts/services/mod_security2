@@ -167,6 +167,17 @@ while (defined($ThisLine = <STDIN>)) {
                     print STDERR "Action: " . $action. "\n";
                 }
             }
+
+            if ( ($error) = ($ThisLine =~ /^Apache-Error: (.*?)$/) ) {
+                $tmpEntry{$count}{"action"} = $action = "HTTPERR";
+                $tmpEntry{$count}{"ruleId"} = $ruleId = "HTTPERR";
+
+                $tmpEntry{$count}{"message"} = $msg = $error;
+                if ( $Debug >= 5 ) {
+                    print STDERR "HTTPERR: " . $error. "\n";
+                }
+            }
+
             if ( ($engineMode) = ($ThisLine =~ /^Engine-Mode: "(.*?)"$/) ) {
                 $tmpEntry{$count}{"engine"} = $engineMode;
                 if ( $Debug >= 5 ) {
