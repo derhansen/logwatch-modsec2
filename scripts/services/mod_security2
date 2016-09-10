@@ -7,7 +7,7 @@
 # only collect first message from audit log #12
 #
 # Revision 1.0.2   2013/11/11
-# fixed error when message and ruleid not set #8
+# fixed error when message and ruleId not set #8
 #
 # Revision 1.0.1   2013/01/11
 # fixed problem with uninitialized values #6
@@ -58,8 +58,8 @@ my %tmpEntry = ();
 my $count = 0;
 
 my %messages = ();
-my %topips = ();
-my %toprules = ();
+my %topIps = ();
+my %topRules = ();
 
 my $check = 0;
 my $option = '';
@@ -72,7 +72,7 @@ if ( $Debug >= 5 ) {
 $tmpEntry{$count}{"action"} = "";
 $tmpEntry{$count}{"hostname"} = "";
 $tmpEntry{$count}{"message"} = "";
-$tmpEntry{$count}{"ruleid"} = "";
+$tmpEntry{$count}{"ruleId"} = "";
 
 while (defined($ThisLine = <STDIN>)) {
     chomp($ThisLine);
@@ -85,7 +85,7 @@ while (defined($ThisLine = <STDIN>)) {
 
     if ($check == 1) {
         if ($option eq "audit-log-header") {
-            ($timestamp, $transactionID, $sourceIP, $sourcePort, $destIP, $destPort ) = ($ThisLine =~ /\[(.*?)\] (.*?) (.*?) (.*?) (.*?) (.*?)$/ );
+            ($timestamp, $transactionId, $sourceIP, $sourcePort, $destIP, $destPort ) = ($ThisLine =~ /\[(.*?)\] (.*?) (.*?) (.*?) (.*?) (.*?)$/ );
 
             $tmpEntry{$count}{"timestamp"} = $timestamp;
             $tmpEntry{$count}{"sourceIp"} = $sourceIP;
@@ -121,7 +121,7 @@ while (defined($ThisLine = <STDIN>)) {
         }
         if ($option eq "audit-log-trailer") {
             if ( $ThisLine =~ /^Message:/ ) {
-                if ($tmpEntry{$count}{"ruleid"} eq "" && $tmpEntry{$count}{"message"} eq "") {
+                if ($tmpEntry{$count}{"ruleId"} eq "" && $tmpEntry{$count}{"message"} eq "") {
                     if ( ($ruleId) = ($ThisLine =~ /\[id \"(.*?)\"\]/) ) {
                         if ( $Debug >= 5 ) {
                             print STDERR "Rule ID: " . $ruleId. "\n";
@@ -133,7 +133,7 @@ while (defined($ThisLine = <STDIN>)) {
                         }
                     }
                     if (defined($msg) && defined($ruleId)) {
-                        $tmpEntry{$count}{"ruleid"} = $ruleId;
+                        $tmpEntry{$count}{"ruleId"} = $ruleId;
                         $tmpEntry{$count}{"message"} = $msg;
                     }
                 }
@@ -173,14 +173,14 @@ while (defined($ThisLine = <STDIN>)) {
         # Create new summary entry if date matches searchdate
         $maybeTimestamp = $tmpEntry{$count}{"timestamp"};
         if ( defined($maybeTimestamp) && ($maybeTimestamp =~ /$SearchDate/) ) {
-            if ( defined $tmpEntry{$count}{"action"} && defined $tmpEntry{$count}{"hostname"} && defined $tmpEntry{$count}{"message"} && defined $tmpEntry{$count}{"ruleid"} ) {
-                if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleid"} ne "" ) {
+            if ( defined $tmpEntry{$count}{"action"} && defined $tmpEntry{$count}{"hostname"} && defined $tmpEntry{$count}{"message"} && defined $tmpEntry{$count}{"ruleId"} ) {
+                if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleId"} ne "" ) {
                     $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
-                    $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
-                    $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
+                    $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleId"}} =  $tmpEntry{$count}{"message"};
+                    $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleId"}}++;
 
-                    $topips{$tmpEntry{$count}{"sourceIp"}}++;
-                    $toprules{$tmpEntry{$count}{"ruleid"}}++;
+                    $topIps{$tmpEntry{$count}{"sourceIp"}}++;
+                    $topRules{$tmpEntry{$count}{"ruleId"}}++;
                 }
             }
         }
@@ -193,7 +193,7 @@ while (defined($ThisLine = <STDIN>)) {
         $tmpEntry{$count}{"action"} = "";
         $tmpEntry{$count}{"hostname"} = "";
         $tmpEntry{$count}{"message"} = "";
-        $tmpEntry{$count}{"ruleid"} = "";
+        $tmpEntry{$count}{"ruleId"} = "";
 
         if ( $Debug >= 5 ) {
             print STDERR "---------------------------------------\n";
@@ -207,11 +207,11 @@ if (keys %messages) {
    foreach my $vhost ( sort {$a cmp $b} keys %messages ) {
         print "\n" . $vhost . " - " . $messages{$vhost}{"numAttacks"} . " time(s)\n";
 
-        foreach my $fromip (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}}) {
-            foreach my $ruleid (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}{$fromip}}) {
-                print "  [ip: " . sprintf("%-15s", $fromip) . "] ";
-                print "[id: " . $ruleid . " ] [msg: " . $messages{$vhost}{"attack"}{$fromip}{$ruleid} . "] ";
-                print " - " . $messages{$vhost}{$fromip}{$ruleid} . " time(s)\n";
+        foreach my $fromIp (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}}) {
+            foreach my $ruleId (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}{$fromIp}}) {
+                print "  [ip: " . sprintf("%-15s", $fromIp) . "] ";
+                print "[id: " . $ruleId . " ] [msg: " . $messages{$vhost}{"attack"}{$fromIp}{$ruleId} . "] ";
+                print " - " . $messages{$vhost}{$fromIp}{$ruleId} . " time(s)\n";
             }
         }
 
@@ -219,15 +219,18 @@ if (keys %messages) {
 }
 
 # Top 10 blocked IPs
-if (keys %topips) {
-   print "\nTOP 10 BLOCKED IPS:\n";
-   my $cnt = 0;
-   foreach my $ip ( sort {$topips{$b} <=> $topips{$a}} keys %topips ) {
-        print "\n  " . sprintf("%2s", ($cnt + 1)) . ". " . $ip . " - " . $topips{$ip} . " time(s)";
+if (keys %topIps) {
+    print "\nTOP 10 BLOCKED IPS:\n";
+    my $cnt = 0;
+    foreach my $ip ( sort {$topIps{$b} <=> $topIps{$a}} keys %topIps ) {
+        print "\n  " . sprintf("%2s", ($cnt + 1)) . ". " . $ip . " - " . $topIps{$ip} . " time(s)";
+
         $cnt++;
-        if($cnt == 10) { last(); }
-   }
-   print "\n";
+        if ($cnt == 10) {
+            last();
+        }
+    }
+    print "\n";
 }
 
 exit(0)
