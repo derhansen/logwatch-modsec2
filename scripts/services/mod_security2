@@ -121,6 +121,7 @@ while (defined($ThisLine = <STDIN>)) {
         }
         if ($option eq "audit-log-trailer") {
             if ( $ThisLine =~ /^Message:/ ) {
+                # TODO: support multiple messages
                 if ($tmpEntry{$count}{"ruleId"} eq "" && $tmpEntry{$count}{"message"} eq "") {
                     if ( ($ruleId) = ($ThisLine =~ /\[id "(.*?)"\]/) ) {
                         if ( $Debug >= 5 ) {
@@ -162,9 +163,46 @@ while (defined($ThisLine = <STDIN>)) {
         $check = 1;
         $option = "request-header";
     }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-C--$/ ) {
+        $check = 1;
+        $option = "request-body";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-D--$/ ) {
+        # WARNING: not implemented
+        $check = 1;
+        $option = "response-header-intended";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-E--$/ ) {
+        # WARNING: this will not always be present once G is implemented
+        $check = 1;
+        $option = "response-body-intended";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-F--$/ ) {
+        $check = 1;
+        $option = "response-header";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-G--$/ ) {
+        # WARNING: not implemented
+        $check = 1;
+        $option = "response-body";
+    }
     elsif ( $ThisLine =~ /^--[0-9a-z]+-H--$/ ) {
         $check = 1;
         $option = "audit-log-trailer";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-I--$/ ) {
+        $check = 1;
+        $option = "request-body-reduced";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-J--$/ ) {
+        # WARNING: not implemented
+        $check = 1;
+        $option = "request-body-files";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-K--$/ ) {
+        # WARNING: v2.5+
+        $check = 1;
+        $option = "matched-rules";
     }
     elsif ( $ThisLine =~ /^--[0-9a-z]+-Z--$/ ) {
         $check = 0;
