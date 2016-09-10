@@ -120,6 +120,13 @@ while (defined($ThisLine = <STDIN>)) {
                     print STDERR "HOST: " . $hostname . "\n";
                 }
             }
+            elsif ( ($userAgent) = ($ThisLine =~ /^User-Agent: (.*?)$/) ) {
+                $tmpEntry{$count}{"userAgent"} = $userAgent;
+
+                if ( $Debug >= 5 ) {
+                    print STDERR "UA: " . $userAgent . "\n";
+                }
+            }
         }
         if ($option eq "audit-log-trailer") {
             if ( $ThisLine =~ /^Message:/ ) {
