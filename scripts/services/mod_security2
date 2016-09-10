@@ -1,13 +1,16 @@
 #!/usr/bin/perl -w
 ##########################################################################
-# $Id: mod_security2, v 1.0.3 2014/05/02
+# $Id: mod_security2, v 1.1.0 2016/09/11
 ##########################################################################
+#
+# Revision 1.1.0   2016/09/11
+# added more comprehensive logging
 #
 # Revision 1.0.3   2014/05/02
 # only collect first message from audit log #12
 #
 # Revision 1.0.2   2013/11/11
-# fixed error when message and ruleid not set #8
+# fixed error when message and ruleId not set #8
 #
 # Revision 1.0.1   2013/01/11
 # fixed problem with uninitialized values #6
@@ -22,6 +25,7 @@
 
 ##########################################################################
 # Copyright © 2013 Torben Hansen <derhansen@gmail.com>
+# Copyright © 2016 LA-MJ <4mr.minj@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the
@@ -58,8 +62,8 @@ my %tmpEntry = ();
 my $count = 0;
 
 my %messages = ();
-my %topips = ();
-my %toprules = ();
+my %topIps = ();
+my %topRules = ();
 
 my $check = 0;
 my $option = '';
@@ -72,20 +76,20 @@ if ( $Debug >= 5 ) {
 $tmpEntry{$count}{"action"} = "";
 $tmpEntry{$count}{"hostname"} = "";
 $tmpEntry{$count}{"message"} = "";
-$tmpEntry{$count}{"ruleid"} = "";
+$tmpEntry{$count}{"ruleId"} = "";
 
 while (defined($ThisLine = <STDIN>)) {
     chomp($ThisLine);
 
     # Reset $check if line starts with two dashes
-    if ( $ThisLine =~ /-[A-Z]--/ ) {
+    if ( $ThisLine =~ /^--[0-9a-z]+-[A-Z]--$/ ) {
         $check = 0;
         $option = "";
     }
 
     if ($check == 1) {
         if ($option eq "audit-log-header") {
-            ($timestamp, $transactionID, $sourceIP, $sourcePort, $destIP, $destPort ) = ($ThisLine =~ /\[(.*?)\] (.*?) (.*?) (.*?) (.*?) (.*?)$/ );
+            ($timestamp, $transactionId, $sourceIP, $sourcePort, $destIP, $destPort ) = ($ThisLine =~ /\[(.*?)\] (.*?) (.*?) (.*?) (.*?) (.*?)$/ );
 
             $tmpEntry{$count}{"timestamp"} = $timestamp;
             $tmpEntry{$count}{"sourceIp"} = $sourceIP;
@@ -102,11 +106,13 @@ while (defined($ThisLine = <STDIN>)) {
         }
 
         if ($option eq "request-header") {
-            if ( ($method, $requestUri) = ($ThisLine =~ /^(POST|GET) (.*?)$/) ) {
+            if ( ($method, $requestUri, $proto) = ($ThisLine =~ /^(GET|HEAD|OPTIONS|TRACE|TRACK|POST|PUT|DELETE|PATCH|CONNECT|PROPFIND) (.*?) (HTTP\/[0-9.]+)$/) ) {
+                $tmpEntry{$count}{"proto"} = $proto;
                 $tmpEntry{$count}{"method"} = $method;
                 $tmpEntry{$count}{"uri"} = $requestUri;
 
                 if ( $Debug >= 5 ) {
+                    print STDERR "PROTO: " . $proto . "\n";
                     print STDERR "METHOD: " . $method . "\n";
                     print STDERR "URI: " . $requestUri . "\n";
                 }
@@ -118,22 +124,42 @@ while (defined($ThisLine = <STDIN>)) {
                     print STDERR "HOST: " . $hostname . "\n";
                 }
             }
+            elsif ( ($userAgent) = ($ThisLine =~ /^User-Agent: (.*?)$/) ) {
+                $tmpEntry{$count}{"userAgent"} = $userAgent;
+
+                if ( $Debug >= 5 ) {
+                    print STDERR "UA: " . $userAgent . "\n";
+                }
+            }
         }
         if ($option eq "audit-log-trailer") {
             if ( $ThisLine =~ /^Message:/ ) {
-                if ($tmpEntry{$count}{"ruleid"} eq "" && $tmpEntry{$count}{"message"} eq "") {
-                    if ( ($ruleId) = ($ThisLine =~ /\[id \"(.*?)\"\]/) ) {
+                # TODO: support multiple messages
+                if ($tmpEntry{$count}{"ruleId"} eq "" && $tmpEntry{$count}{"message"} eq "") {
+                    if ( ($ruleId) = ($ThisLine =~ /\[id "(.*?)"\]/) ) {
                         if ( $Debug >= 5 ) {
                             print STDERR "Rule ID: " . $ruleId. "\n";
                         }
                     }
-                    if ( ($msg) = ($ThisLine =~ /\[msg \"(.*?)\"\]/) ) {
+                    if ( ($msg) = ($ThisLine =~ /\[msg "(.*?)"\]/) ) {
                         if ( $Debug >= 5 ) {
                             print STDERR "Message: " . $msg. "\n";
                         }
                     }
-                    if (defined($msg) && defined($ruleId)) {
-                        $tmpEntry{$count}{"ruleid"} = $ruleId;
+                    if ( ($data) = ($ThisLine =~ /\[data "(.*?)"\]/) ) {
+                        $data = substr($data, 0, 30);
+                        if ( $Debug >= 5 ) {
+                            print STDERR "Data: " . $data. "\n";
+                        }
+                    }
+                    if (defined($msg) && $msg ne "" && defined($ruleId) && $ruleId ne "") {
+                        if (defined($tmpEntry{$count}{"uri"}) && $tmpEntry{$count}{"uri"} ne "") {
+                            $msg .= " - " . $tmpEntry{$count}{"uri"};
+                        }
+                        if (defined($data) && $data ne "") {
+                            $msg .= " - " . $data;
+                        }
+                        $tmpEntry{$count}{"ruleId"} = $ruleId;
                         $tmpEntry{$count}{"message"} = $msg;
                     }
                 }
@@ -145,7 +171,41 @@ while (defined($ThisLine = <STDIN>)) {
                     print STDERR "Action: " . $action. "\n";
                 }
             }
-            if ( ($engineMode) = ($ThisLine =~ /^Engine-Mode: (.*?)$/) ) {
+
+            if ( ($error) = ($ThisLine =~ /^Apache-Error: (.*?)$/) ) {
+                $tmpEntry{$count}{"action"} = $action = "HTTPERR";
+                $tmpEntry{$count}{"ruleId"} = $ruleId = "HTTPERR";
+
+                $tmpEntry{$count}{"message"} = $msg = $error;
+                if ( $Debug >= 5 ) {
+                    print STDERR "HTTPERR: " . $error. "\n";
+                }
+            }
+
+            if ( ($engineMode) = ($ThisLine =~ /^Engine-Mode: "(.*?)"$/) ) {
+
+                if ( !(defined($msg) && $msg ne "" &&
+                       defined($ruleId) && $ruleId ne "") ) {
+
+                    # most likely HTTP 403 from other sources
+                    # like .htaccess
+
+                    $tmpEntry{$count}{"action"} = "HTTP403";
+                    $tmpEntry{$count}{"ruleId"} = "HTTP403";
+
+                    $msg = $transactionId;
+                    if (defined($tmpEntry{$count}{"uri"}) && $tmpEntry{$count}{"uri"} ne "") {
+                        $msg = $tmpEntry{$count}{"uri"} . " - " . $msg;
+                    }
+
+                    $tmpEntry{$count}{"message"} = $msg;
+
+                    if ( $Debug >= 5 ) {
+                        print STDERR "HTTP403: " . $msg. "\n";
+                    }
+
+                }
+
                 $tmpEntry{$count}{"engine"} = $engineMode;
                 if ( $Debug >= 5 ) {
                     print STDERR "Engine mode: " . $engineMode. "\n";
@@ -154,34 +214,83 @@ while (defined($ThisLine = <STDIN>)) {
         }
     }
 
-    if ( $ThisLine =~ /-A--/ ) {
+    if ( $ThisLine =~ /^--[0-9a-z]+-A--$/ ) {
         $check = 1;
         $option = "audit-log-header";
     }
-    elsif ( $ThisLine =~ /-B--/ ) {
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-B--$/ ) {
         $check = 1;
         $option = "request-header";
     }
-    elsif ( $ThisLine =~ /-H--/ ) {
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-C--$/ ) {
+        $check = 1;
+        $option = "request-body";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-D--$/ ) {
+        # WARNING: not implemented
+        $check = 1;
+        $option = "response-header-intended";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-E--$/ ) {
+        # WARNING: this will not always be present once G is implemented
+        $check = 1;
+        $option = "response-body-intended";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-F--$/ ) {
+        $check = 1;
+        $option = "response-header";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-G--$/ ) {
+        # WARNING: not implemented
+        $check = 1;
+        $option = "response-body";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-H--$/ ) {
         $check = 1;
         $option = "audit-log-trailer";
     }
-    elsif ( $ThisLine =~ /-Z--/ ) {
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-I--$/ ) {
+        $check = 1;
+        $option = "request-body-reduced";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-J--$/ ) {
+        # WARNING: not implemented
+        $check = 1;
+        $option = "request-body-files";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-K--$/ ) {
+        # WARNING: v2.5+
+        $check = 1;
+        $option = "matched-rules";
+    }
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-Z--$/ ) {
         $check = 0;
         $option = "";
 
         # Create new summary entry if date matches searchdate
         $maybeTimestamp = $tmpEntry{$count}{"timestamp"};
         if ( defined($maybeTimestamp) && ($maybeTimestamp =~ /$SearchDate/) ) {
-            if ( defined $tmpEntry{$count}{"action"} && defined $tmpEntry{$count}{"hostname"} && defined $tmpEntry{$count}{"message"} && defined $tmpEntry{$count}{"ruleid"} ) {
-                if ( $tmpEntry{$count}{"action"} ne "" && $tmpEntry{$count}{"hostname"} ne "" && $tmpEntry{$count}{"message"} ne "" && $tmpEntry{$count}{"ruleid"} ne "" ) {
-                    $messages{$tmpEntry{$count}{"hostname"}}{"numAttacks"}++;
-                    $messages{$tmpEntry{$count}{"hostname"}}{"attack"}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}} =  $tmpEntry{$count}{"message"};
-                    $messages{$tmpEntry{$count}{"hostname"}}{$tmpEntry{$count}{"sourceIp"}}{$tmpEntry{$count}{"ruleid"}}++;
 
-                    $topips{$tmpEntry{$count}{"sourceIp"}}++;
-                    $toprules{$tmpEntry{$count}{"ruleid"}}++;
-                }
+            if (defined $tmpEntry{$count}{"action"} &&
+                defined $tmpEntry{$count}{"hostname"} &&
+                defined $tmpEntry{$count}{"message"} &&
+                defined $tmpEntry{$count}{"ruleId"} &&
+                $tmpEntry{$count}{"action"} ne "" &&
+                $tmpEntry{$count}{"hostname"} ne "" &&
+                $tmpEntry{$count}{"message"} ne "" &&
+                $tmpEntry{$count}{"ruleId"} ne "") {
+
+                $hostname = $tmpEntry{$count}{"hostname"};
+                $sourceIp = $tmpEntry{$count}{"sourceIp"};
+                $ruleId = $tmpEntry{$count}{"ruleId"};
+                $message = $tmpEntry{$count}{"message"};
+
+                $messages{$hostname}{"numAttacks"}++;
+                $messages{$hostname}{"attack"}{$sourceIp}{$ruleId} = $message;
+                $messages{$hostname}{$sourceIp}{$ruleId}++;
+
+                $topIps{$sourceIp}++;
+                $topRules{$ruleId}++;
             }
         }
 
@@ -189,11 +298,14 @@ while (defined($ThisLine = <STDIN>)) {
         $count++;
 
         # Reset values
+        $msg = "";
+        $ruleId = "";
+
         $tmpEntry = ();
         $tmpEntry{$count}{"action"} = "";
         $tmpEntry{$count}{"hostname"} = "";
         $tmpEntry{$count}{"message"} = "";
-        $tmpEntry{$count}{"ruleid"} = "";
+        $tmpEntry{$count}{"ruleId"} = "";
 
         if ( $Debug >= 5 ) {
             print STDERR "---------------------------------------\n";
@@ -207,27 +319,45 @@ if (keys %messages) {
    foreach my $vhost ( sort {$a cmp $b} keys %messages ) {
         print "\n" . $vhost . " - " . $messages{$vhost}{"numAttacks"} . " time(s)\n";
 
-        foreach my $fromip (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}}) {
-            foreach my $ruleid (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}{$fromip}}) {
-                print "  [ip: " . sprintf("%-15s", $fromip) . "] ";
-                print "[id: " . $ruleid . " ] [msg: " . $messages{$vhost}{"attack"}{$fromip}{$ruleid} . "] ";
-                print " - " . $messages{$vhost}{$fromip}{$ruleid} . " time(s)\n";
+        foreach my $fromIp (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}}) {
+            foreach my $ruleId (sort {$a cmp $b} keys %{$messages{$vhost}{"attack"}{$fromIp}}) {
+                print "  [" . sprintf("%-15s", $fromIp) . "] ";
+                print "[" . $ruleId . "] [" . $messages{$vhost}{"attack"}{$fromIp}{$ruleId} . "] ";
+                print " - " . $messages{$vhost}{$fromIp}{$ruleId} . " time(s)\n";
             }
         }
 
    }
 }
 
-# Top 10 blocked IPs
-if (keys %topips) {
-   print "\nTOP 10 BLOCKED IPS:\n";
-   my $cnt = 0;
-   foreach my $ip ( sort {$topips{$b} <=> $topips{$a}} keys %topips ) {
-        print "\n  " . sprintf("%2s", ($cnt + 1)) . ". " . $ip . " - " . $topips{$ip} . " time(s)";
+# Top 10 matched rules
+if (keys %topRules) {
+    print "\nTOP 10 Matched rules:\n";
+    my $cnt = 0;
+    foreach my $id ( sort {$topRules{$b} <=> $topRules{$a}} keys %topRules ) {
+        print "\n  " . sprintf("%2s", ($cnt + 1)) . ". " . $id . " - " . $topRules{$id} . " time(s)";
+
         $cnt++;
-        if($cnt == 10) { last(); }
-   }
-   print "\n";
+        if ($cnt == 10) {
+            last();
+        }
+    }
+    print "\n";
+}
+
+# Top 10 blocked IPs
+if (keys %topIps) {
+    print "\nTOP 10 BLOCKED IPS:\n";
+    my $cnt = 0;
+    foreach my $ip ( sort {$topIps{$b} <=> $topIps{$a}} keys %topIps ) {
+        print "\n  " . sprintf("%2s", ($cnt + 1)) . ". " . $ip . " - " . $topIps{$ip} . " time(s)";
+
+        $cnt++;
+        if ($cnt == 10) {
+            last();
+        }
+    }
+    print "\n";
 }
 
 exit(0)
