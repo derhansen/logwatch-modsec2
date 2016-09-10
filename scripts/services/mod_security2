@@ -1,7 +1,10 @@
 #!/usr/bin/perl -w
 ##########################################################################
-# $Id: mod_security2, v 1.0.3 2014/05/02
+# $Id: mod_security2, v 1.1.0 2016/09/11
 ##########################################################################
+#
+# Revision 1.1.0   2016/09/11
+# added more comprehensive logging
 #
 # Revision 1.0.3   2014/05/02
 # only collect first message from audit log #12
@@ -22,6 +25,7 @@
 
 ##########################################################################
 # Copyright © 2013 Torben Hansen <derhansen@gmail.com>
+# Copyright © 2016 LA-MJ <4mr.minj@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the

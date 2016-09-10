@@ -1,3 +1,6 @@
+11.09.2016 - LA-MJ <4mr.minj@gmail.com>
+- Updated to modsecurity 2.9, added more comprehensive logging
+
 11.01.2013 - Torben Hansen <derhansen@gmail.com>
 - Fixed problem with entries, which do not contain a message or rule id #8
 
