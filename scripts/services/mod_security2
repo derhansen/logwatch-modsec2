@@ -78,7 +78,7 @@ while (defined($ThisLine = <STDIN>)) {
     chomp($ThisLine);
 
     # Reset $check if line starts with two dashes
-    if ( $ThisLine =~ /-[A-Z]--/ ) {
+    if ( $ThisLine =~ /^--[0-9a-z]+-[A-Z]--$/ ) {
         $check = 0;
         $option = "";
     }
@@ -102,7 +102,7 @@ while (defined($ThisLine = <STDIN>)) {
         }
 
         if ($option eq "request-header") {
-            if ( ($method, $requestUri) = ($ThisLine =~ /^(POST|GET) (.*?)$/) ) {
+            if ( ($method, $requestUri) = ($ThisLine =~ /^(GET|HEAD|OPTIONS|TRACE|TRACK|POST|PUT|DELETE|PATCH|CONNECT|PROPFIND) (.*?) HTTP\/[0-9.]+$/) ) {
                 $tmpEntry{$count}{"method"} = $method;
                 $tmpEntry{$count}{"uri"} = $requestUri;
 
@@ -122,12 +122,12 @@ while (defined($ThisLine = <STDIN>)) {
         if ($option eq "audit-log-trailer") {
             if ( $ThisLine =~ /^Message:/ ) {
                 if ($tmpEntry{$count}{"ruleId"} eq "" && $tmpEntry{$count}{"message"} eq "") {
-                    if ( ($ruleId) = ($ThisLine =~ /\[id \"(.*?)\"\]/) ) {
+                    if ( ($ruleId) = ($ThisLine =~ /\[id "(.*?)"\]/) ) {
                         if ( $Debug >= 5 ) {
                             print STDERR "Rule ID: " . $ruleId. "\n";
                         }
                     }
-                    if ( ($msg) = ($ThisLine =~ /\[msg \"(.*?)\"\]/) ) {
+                    if ( ($msg) = ($ThisLine =~ /\[msg "(.*?)"\]/) ) {
                         if ( $Debug >= 5 ) {
                             print STDERR "Message: " . $msg. "\n";
                         }
@@ -145,7 +145,7 @@ while (defined($ThisLine = <STDIN>)) {
                     print STDERR "Action: " . $action. "\n";
                 }
             }
-            if ( ($engineMode) = ($ThisLine =~ /^Engine-Mode: (.*?)$/) ) {
+            if ( ($engineMode) = ($ThisLine =~ /^Engine-Mode: "(.*?)"$/) ) {
                 $tmpEntry{$count}{"engine"} = $engineMode;
                 if ( $Debug >= 5 ) {
                     print STDERR "Engine mode: " . $engineMode. "\n";
@@ -154,19 +154,19 @@ while (defined($ThisLine = <STDIN>)) {
         }
     }
 
-    if ( $ThisLine =~ /-A--/ ) {
+    if ( $ThisLine =~ /^--[0-9a-z]+-A--$/ ) {
         $check = 1;
         $option = "audit-log-header";
     }
-    elsif ( $ThisLine =~ /-B--/ ) {
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-B--$/ ) {
         $check = 1;
         $option = "request-header";
     }
-    elsif ( $ThisLine =~ /-H--/ ) {
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-H--$/ ) {
         $check = 1;
         $option = "audit-log-trailer";
     }
-    elsif ( $ThisLine =~ /-Z--/ ) {
+    elsif ( $ThisLine =~ /^--[0-9a-z]+-Z--$/ ) {
         $check = 0;
         $option = "";
 
